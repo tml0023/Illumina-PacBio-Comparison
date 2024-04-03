@@ -1,5 +1,5 @@
 # Illumina-PacBio-Comparison
-In this repository I summarize the tools used to call multiple variant types for Illumina short-read data and PacBio HiFi read data for identical samples. 
+In this repository I summarize the tools used to call multiple variant types for Illumina short-read data and PacBio HiFi read data for identical samples. Outputs for both datasets are compared to analyze each platforms ability to identify variants, and how this can affect the identification of genetic variants in breast cancer susceptibility genes. 
 
 
 
@@ -9,11 +9,9 @@ In this repository I summarize the tools used to call multiple variant types for
 This document shows how SMRT grant PacBio HiFi whole genome sequencing samples were procecced for CNV calling and short variant calling. I am attaching a link to the [SMRT_tools manual](chrome-extension://efaidnbmnnnibpcajpcglclefindmkaj/https://www.pacb.com/wp-content/uploads/SMRT_Tools_Reference_Guide_v11.0.pdf) that is a great help. 
 
 ## Copy Number Variation 
-These files can be found in the following easley directory:
-***/hosted/cvmpt/archive/PacBio_WGS_Aug2022_TL/ftp.genome.arizona.edu/PacBio_Bioinfo_FILES/SMRTtools_CNV_FILES***
 
 ### Step1 Trim fastq files
-HiFi data is very high quality and does not need a whole bunch of trimming but it is always helpful to take a look at the data before hand to see what exactly you want to trim. 
+HiFi data is very high quality and does not need a whole bunch of trimming but it is always helpful to take a look at the data before hand to see what exactly you want to trim. The raw data in this study was analyzed using FastQC/MultiQC.
 
 ```
 #!/bin/sh
@@ -42,7 +40,7 @@ done
 ```
 
 ### Step2 Align HiFi reads to reference genome with minimap2 (pbmm2)
-PacBio recommends using the alignment tool minimap2 for its long-read data. This tools is available in SMRT_tools provided by PacBio. 
+PacBio recommends using the alignment tool minimap2 for its long-read data. This tools is available in SMRTtools provided by PacBio. 
 
 ```
 #!/bin/sh
@@ -55,7 +53,7 @@ for FILE in $FILELIST; do
 SHORT=`echo $FILE | awk -F "_" '{print $1}'`
 # SHORT = BC-CR-130-1
 
-/tools/smrtlink/new/bundles/smrttools/smrtcmds/bin/pbmm2 align /hosted/cvmpt/archive/Human_Genome/genome.fa "$SHORT"_merged.hifi_reads.trim.fastq.gz "$SHORT".hifi_reads.bam --sort --preset CCS --sample "$SHORT" --rg '@RG\tID:"$SHORT"'
+/tools/smrtlink/new/bundles/smrttools/smrtcmds/bin/pbmm2 align /genome.fa "$SHORT"_merged.hifi_reads.trim.fastq.gz "$SHORT".hifi_reads.bam --sort --preset CCS --sample "$SHORT" --rg '@RG\tID:"$SHORT"'
 
 done
 ```
@@ -93,7 +91,7 @@ for FILE in $FILELIST; do
 SHORT=`echo $FILE | awk -F "_" '{print $1}'`
 # SHORT = BC-CR-130-1
 
-/tools/smrtlink/new/bundles/smrttools/smrtcmds/bin/pbsv call --ccs /hosted/cvmpt/archive/Human_Genome/genome.fa "$SHORT".hifi_read.svsig.gz "$SHORT".hifi_read.vcf
+/tools/smrtlink/new/bundles/smrttools/smrtcmds/bin/pbsv call --ccs /genome.fa "$SHORT".hifi_read.svsig.gz "$SHORT".hifi_read.vcf
 
 done
 ```
@@ -106,20 +104,14 @@ This program is not included from with SMRT_tools and must be downloaded from th
 
 for FILE in *vcf; do 
 
-#svpack-main/svpack filter --pass-only --min-svlen 50 BC-CR-50-1.hifi_read.vcf |
-#svpack-main/svpack consequence --require-csq - ensembl.GRCh38.101.reformatted.gff3 > Annotated_BC-CR-50-1.hifi_read.vcf
-
 svpack-main/svpack filter --pass-only --min-svlen 50 $FILE |
 svpack-main/svpack consequence --require-csq - ensembl.GRCh38.101.reformatted.gff3 > Annotated_"$FILE"
-grep  "sv:cds" Annotated_"$FILE" > Filtered_Annotated_"$FILE"
 
 done
 ```
 
 
 ## Short variant calling
-These files can be found in the following easley directory:
-***/hosted/cvmpt/archive/PacBio_WGS_Aug2022_TL/ftp.genome.arizona.edu/SingularityCE_Trial_Apr2023***
 
 ### Step1 Trim fastq files
 HiFi data is very high quality and does not need a whole bunch of trimming but it is always helpful to take a look at the data before hand to see what exactly you want to trim. 
@@ -151,7 +143,7 @@ done
 ```
 
 ### Step2 Align HiFi reads to reference genome with minimap2 (pbmm2)
-PacBio recommends using the alignment tool minimap2 for its long-read data. This tools is available in SMRT_tools provided by PacBio. 
+PacBio recommends using the alignment tool minimap2 for its long-read data. This tools is available in SMRTtools provided by PacBio. 
 
 ```
 #!/bin/sh
@@ -164,13 +156,13 @@ for FILE in $FILELIST; do
 SHORT=`echo $FILE | awk -F "_" '{print $1}'`
 # SHORT = BC-CR-130-1
 
-/tools/smrtlink/new/bundles/smrttools/smrtcmds/bin/pbmm2 align /hosted/cvmpt/archive/Human_Genome/genome.fa "$SHORT"_merged.hifi_reads.trim.fastq.gz "$SHORT".hifi_reads.bam --sort --preset CCS --sample "$SHORT" --rg '@RG\tID:"$SHORT"'
+/tools/smrtlink/new/bundles/smrttools/smrtcmds/bin/pbmm2 align /genome.fa "$SHORT"_merged.hifi_reads.trim.fastq.gz "$SHORT".hifi_reads.bam --sort --preset CCS --sample "$SHORT" --rg '@RG\tID:"$SHORT"'
 
 done
 ```
 
 ### Step3 Use DeepVariant to call short variants
-Deepvariant is a program that is not included in SMRT_tool. However this is the program recommended by Pacbio for short variant calling. This program can be downloaded from the [Githhub page](https://github.com/google/deepvariant). There is also an example of deepvariant located [here](https://github.com/google/deepvariant/blob/r1.0/docs/deepvariant-pacbio-model-case-study.md).
+Deepvariant is a program that is not included in SMRTtools. However this is the program recommended by Pacbio for short variant calling. This program can be downloaded from the [Githhub page](https://github.com/google/deepvariant). There is also an example of deepvariant located [here](https://github.com/google/deepvariant/blob/r1.0/docs/deepvariant-pacbio-model-case-study.md).
 
 ```
 #!/bin/sh
@@ -185,5 +177,5 @@ docker://google/deepvariant:${BIN_VERSION} \
   --ref genome.fa \
   --reads BC-EAMC-209-1.hifi_reads.bam \
   --output_vcf BC-EAMC-209-1.hifi_reads_deepvariant.vcf.gz \
-  --num_shards $(nproc) \
+  --num_shards \
 ```
