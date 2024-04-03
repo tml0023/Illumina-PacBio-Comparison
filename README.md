@@ -179,3 +179,30 @@ docker://google/deepvariant:${BIN_VERSION} \
   --output_vcf BC-EAMC-209-1.hifi_reads_deepvariant.vcf.gz \
   --num_shards \
 ```
+
+#  Illumina and PacBio data processing using the Genome Analysis ToolKit (GATK)
+This pipeline was used for calling short variants in the datasets provided by both sequencing platforms.
+
+### Step1 Trimming of fastq files 
+
+### Step2 Align reads to reference using Burrows-Wheeler Aligner 
+```
+#!/bin/sh
+
+module load bwa
+module load samtools
+
+FILELIST=`cat FSamplesList.txt`
+for FILE in $FILELIST; do 
+
+SHORT=`echo $FILE | awk -F "_" '{print $1}'`
+
+bwa mem -t 20 -M /hosted/cvmpt/archive/Human_Genome/genome "$SHORT".trim_1P.fastq \
+        "$SHORT".trim_2P.fastq > "$SHORT".mem.sam
+
+samtools view -Sb -@ 20 "$SHORT".mem.sam -o "$SHORT".mem.bam
+samtools sort -@ 20 "$SHORT".mem.bam -o "$SHORT".memsorted.bam
+samtools index -@ 20 "$SHORT".memsorted.bam
+
+done
+```
