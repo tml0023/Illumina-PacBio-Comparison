@@ -3,9 +3,8 @@ In this repository I summarize the tools used to call multiple variant types for
 
 
 
-This document can be found in the follwing directory: 
 
-***/MernerLab_General/Bioinformatics_meetings_protocols/*** 
+# PacBio HiFi data processing with SMRTtools
 
 This document shows how SMRT grant PacBio HiFi whole genome sequencing samples were procecced for CNV calling and short variant calling. I am attaching a link to the [SMRT_tools manual](chrome-extension://efaidnbmnnnibpcajpcglclefindmkaj/https://www.pacb.com/wp-content/uploads/SMRT_Tools_Reference_Guide_v11.0.pdf) that is a great help. 
 
