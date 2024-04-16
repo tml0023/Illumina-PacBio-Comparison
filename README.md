@@ -1,13 +1,13 @@
 # Illumina-PacBio-Comparison
 In this repository I summarize the tools used to call multiple variant types for Illumina short-read data and PacBio HiFi read data for identical samples. Outputs for both datasets are compared to analyze each platforms ability to identify variants, and how this can affect the identification of genetic variants in breast cancer susceptibility genes. 
-
+___
 
 
 
 # PacBio HiFi data processing with SMRTtools
 
 This document shows how SMRT grant PacBio HiFi whole genome sequencing samples were procecced for CNV calling and short variant calling. I am attaching a link to the [SMRT_tools manual](chrome-extension://efaidnbmnnnibpcajpcglclefindmkaj/https://www.pacb.com/wp-content/uploads/SMRT_Tools_Reference_Guide_v11.0.pdf) that is a great help. 
-
+___
 ## Copy Number Variation 
 
 ### Step1 Trim fastq files
@@ -111,8 +111,8 @@ done
 ```
 
 ___
-## Short variant calling
-___
+## PacBio HiFi short variant calling
+
 
 ### Step1 Trim fastq files
 HiFi data is very high quality and does not need a whole bunch of trimming but it is always helpful to take a look at the data before hand to see what exactly you want to trim. 
