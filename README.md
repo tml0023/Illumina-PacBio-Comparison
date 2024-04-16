@@ -110,8 +110,9 @@ svpack-main/svpack consequence --require-csq - ensembl.GRCh38.101.reformatted.gf
 done
 ```
 
-
+___
 ## Short variant calling
+___
 
 ### Step1 Trim fastq files
 HiFi data is very high quality and does not need a whole bunch of trimming but it is always helpful to take a look at the data before hand to see what exactly you want to trim. 
