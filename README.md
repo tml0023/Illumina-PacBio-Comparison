@@ -34,7 +34,7 @@ SHORT=`echo $SHORTER | awk -F "_" '{print $1}'`
 #SHORT= BC-CR-130-1
 
 #Make sure that the path to the trimmomatic.jar file is correct
-java -jar /tools/trimmomatic-0.39/trimmomatic-0.39.jar SE -threads 48 -phred33 -trimlog "$SHORT".trim.log "$SHORT"_merged.hifi_reads.fastq.gz "$SHORT"_merged.hifi_reads.trim.fastq.gz ILLUMINACLIP:/hosted/cvmpt/archive/WGS_Human/WGS3_Dec2022_TL/TruSeq3-PE.fa:2:30:10 CROP:33000 HEADCROP:20 SLIDINGWINDOW:4:10
+java -jar /tools/trimmomatic-0.39/trimmomatic-0.39.jar SE -threads 48 -phred33 -trimlog "$SHORT".trim.log "$SHORT"_merged.hifi_reads.fastq.gz "$SHORT"_merged.hifi_reads.trim.fastq.gz ILLUMINACLIP:TruSeq3-PE.fa:2:30:10 CROP:33000 HEADCROP:20 SLIDINGWINDOW:4:10
 
 done
 ```
@@ -180,6 +180,7 @@ docker://google/deepvariant:${BIN_VERSION} \
   --output_vcf BC-EAMC-209-1.hifi_reads_deepvariant.vcf.gz \
   --num_shards \
 ```
+___
 
 #  Illumina and PacBio data processing using the Genome Analysis ToolKit (GATK)
 This pipeline was used for calling short variants in the datasets provided by both sequencing platforms.
