@@ -186,7 +186,7 @@ ___
 This pipeline was used for calling short variants in the datasets provided by both sequencing platforms.
 
 ### Step1A Trimming of Illumina fastq files 
-You notice that the Illumina and PacBio trimming parameters are different. These scripts follow recommended stratagies for maximizing data quality for each of the sequencing platforms. Quality outputs for trimmed Illumina and PacBio data can be viewed in this repository.
+You notice that the Illumina and PacBio trimming parameters are different. These scripts follow recommended strategies for maximizing data quality for each of the sequencing platforms. Quality outputs for trimmed Illumina and PacBio data can be viewed in this repository.
 ```
 #!/bin/sh
 
