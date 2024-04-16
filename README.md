@@ -185,8 +185,58 @@ ___
 #  Illumina and PacBio data processing using the Genome Analysis ToolKit (GATK)
 This pipeline was used for calling short variants in the datasets provided by both sequencing platforms.
 
-### Step1 Trimming of fastq files 
+### Step1A Trimming of Illumina fastq files 
+You notice that the Illumina and PacBio trimming parameters are different. These scripts follow recommended stratagies for maximizing data quality for each of the sequencing platforms. Quality outputs for trimmed Illumina and PacBio data can be viewed in this repository.
+```
+#!/bin/sh
 
+cd /hosted/cvmpt/archive/WGS_Human/WGS2_Apr2022_TL
+## load the module
+
+#load the module on Easley
+module load trimmomatic/0.39
+
+ls *_1_*.fastq.gz > FSamplesList.txt
+
+FILELIST=`cat FSamplesList.txt`
+
+for FILENAME in $FILELIST
+do
+#BC-CR-100-1_1_Apr2022.fastq.gz
+SHORTER=`echo $FILENAME | awk -F "." '{print $1}'`
+SHORT=`echo $SHORTER | awk -F "_" '{print $1}'`
+
+#Make sure that the path to the trimmomatic.jar file is correct
+java -jar /tools/trimmomatic-0.39/trimmomatic-0.39.jar PE -threads 48 -phred33 -trimlog $SHORTER.trim.log "$SHORT"_1_Apr2022.fastq.gz "$SHORT"_2_Apr2022.fastq.gz -baseout $SHORT.trim.fastq.gz ILLUMINACLIP:TruSeq3-PE.fa:2:30:10 HEADCROP:0 LEADING:0 TRAILING:0 SLIDINGWINDOW:4:10
+
+done
+```
+### Step1B Trimming of PacBio fastq files
+```
+#!/bin/sh
+
+## load the module
+
+#load the module on Easley
+module load trimmomatic/0.39
+
+ls *merged*fastq.gz > FSamplesList.txt
+
+FILELIST=`cat FSamplesList.txt`
+
+for FILENAME in $FILELIST
+do
+
+#BC-CR-130-1_merged.hifi_reads.fastq.gz
+SHORTER=`echo $FILENAME | awk -F "." '{print $1}'`
+SHORT=`echo $SHORTER | awk -F "_" '{print $1}'`
+#SHORT= BC-CR-130-1
+
+#Make sure that the path to the trimmomatic.jar file is correct
+java -jar /tools/trimmomatic-0.39/trimmomatic-0.39.jar SE -threads 48 -phred33 -trimlog "$SHORT".trim.log "$SHORT"_merged.hifi_reads.fastq.gz "$SHORT"_merged.hifi_reads.trim.fastq.gz ILLUMINACLIP:TruSeq3-PE.fa:2:30:10 CROP:33000 HEADCROP:20 SLIDINGWINDOW:4:10
+
+done
+```
 ### Step2 Align reads to reference using Burrows-Wheeler Aligner 
 ```
 #!/bin/sh
