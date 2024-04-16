@@ -269,8 +269,8 @@ Note the read groups for the Illumina script are changed to represent the Illumi
 ```
 #!/bin/sh
 
-module load samtools
-module load picard
+module load samtools/1.19
+module load picard/2.23.9 
 
 FILELIST=`cat FSamplesList.txt`
 for FILE in $FILELIST; do
@@ -291,13 +291,93 @@ samtools index -@ 48 "$SHORT"_merged.hifi_reads.rgsorted.bam
 
 done
 ```
+### Step5 Base recalibrator 
+```
+#!/bin/sh
 
+module load gatkgatk/4.1.9.0
+module load samtools/1.19
+module load R/4.3.2
 
+FILELIST=`cat FSamplesList.txt`  ##Can be used if a file list is needed
+for FILE in $FILELIST; do
 
+SHORT=`echo $FILE | awk -F "_" '{print $1}'`     
 
+ gatk BaseRecalibrator --maximum-cycle-value 33000 \
+   -I "$SHORT"_merged.hifi_reads.rgsorted.bam \
+   -R /genome.fa \
+   --known-sites /dbSNP150.hg38.vcf \
+   --known-sites /Mills_and_1000G_gold_standard.indels.hg38.vcf \
+   --known-sites /Homo_sapiens_assembly38.known_indels.vcf \
+   --known-sites /hapmap_3.3.hg38.vcf \
+   -O "$SHORT"_merged.hifi_reads.recal_data.table
+ 
+ gatk ApplyBQSR \
+   -R /hosted/cvmpt/archive/Human_Genome/genome.fa \
+   -I "$SHORT"_merged.hifi_reads.rgsorted.bam \
+   --bqsr-recal-file "$SHORT"_merged.hifi_reads.recal_data.table \
+   -O "$SHORT"_merged.hifi_reads.recal.bam
+ 
+ gatk AnalyzeCovariates \
+   -bqsr "$SHORT"_merged.hifi_reads.recal_data.table \
+   -plots "$SHORT"_merged.hifi_reads.AnalyzeCovariates.pdf
 
+samtools sort -@ 48 "$SHORT"_merged.hifi_reads.recal.bam -o "$SHORT"_merged.hifi_reads.recal.sorted.bam
+samtools index -@ 48 "$SHORT"_merged.hifi_reads.recal.sorted.bam
 
+done
+```
+### Step6 Haplotype caller
+```
+#!/bin/sh
 
+module load gatk/4.1.9.0
+
+FILELIST=`cat FSamplesList.txt`  ##Can be used if a file list is needed
+for FILE in $FILELIST; do
+
+SHORT=`echo $FILE | awk -F "_" '{print $1}'`     
+
+ gatk --java-options "-Xmx200g" HaplotypeCaller  \
+   -R /hosted/cvmpt/archive/Human_Genome/genome.fa \
+   -I "$SHORT"_merged.hifi_reads.recal.sorted.bam \
+   -O "$SHORT"_Oct2023_merged.hifi_reads.vcf.gz \
+   -A AlleleFraction \
+   -A BaseQuality \
+   -A MappingQuality \
+   --native-pair-hmm-threads 48 
+
+done
+```
+### Step7 Genomic database import
+```
+#!/bin/sh
+
+module load picard/2.23.9
+module load gatk/4.1.9.0
+
+gatk --java-options "-Xmx550g -Xms550g" GenomicsDBImport \
+-V BC-CR-50-1_merged.hifi_reads.vcf.gz \
+-V BC-EAMC-130-1_merged.hifi_reads.vcf.gz \
+-V BC-EAMC-209-1_merged.hifi_reads.vcf.gz \
+-L wgs_calling_regions.hg38.interval_list \
+--genomicsdb-workspace-path PacBio_GDBI_Workspace \
+--tmp-dir PacBio_GDBI_tmp \
+--reader-threads 48 \
+```
+### Step8 GenotypeGVCF
+````
+#!/bin/sh
+
+module load gatk 
+
+ gatk --java-options "-Xmx550g" GenotypeGVCFs \
+   -R /hosted/cvmpt/archive/Human_Genome/genome.fa \
+   -V gendb://PacBio_GDBI_Workspace \
+   -O GenotypeGVCF_output_PacBio.g.vcf.gz \
+   --tmp-dir GenotypeGVCF_PacBio_tmp
+````
 
 
 
