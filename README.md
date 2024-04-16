@@ -185,28 +185,22 @@ ___
 #  Illumina and PacBio data processing using the Genome Analysis ToolKit (GATK)
 This pipeline was used for calling short variants in the datasets provided by both sequencing platforms.
 
+You notice that the Illumina and PacBio trimming parameters are different. These trimming scripts follow recommended strategies for maximizing data quality for each of the sequencing platforms. Quality outputs for trimmed Illumina and PacBio data can be viewed in this repository.
+Trimming parameters are the only different parameters between Illumina and PacBio data in this GATK pipeline in effort to keep the data processing as similar as possible. The only difference between all other scripts is the naming of the files. Note file names are indicative of the PacBio data. Illumina scripts are the exact same other than the naming of the files. 
+
 ### Step1A Trimming of Illumina fastq files 
-You notice that the Illumina and PacBio trimming parameters are different. These scripts follow recommended strategies for maximizing data quality for each of the sequencing platforms. Quality outputs for trimmed Illumina and PacBio data can be viewed in this repository.
 ```
 #!/bin/sh
 
-cd /hosted/cvmpt/archive/WGS_Human/WGS2_Apr2022_TL
-## load the module
-
-#load the module on Easley
 module load trimmomatic/0.39
-
-ls *_1_*.fastq.gz > FSamplesList.txt
 
 FILELIST=`cat FSamplesList.txt`
 
 for FILENAME in $FILELIST
 do
-#BC-CR-100-1_1_Apr2022.fastq.gz
-SHORTER=`echo $FILENAME | awk -F "." '{print $1}'`
-SHORT=`echo $SHORTER | awk -F "_" '{print $1}'`
 
-#Make sure that the path to the trimmomatic.jar file is correct
+SHORT=`echo $FILENAME | awk -F "_" '{print $1}'`
+
 java -jar /tools/trimmomatic-0.39/trimmomatic-0.39.jar PE -threads 48 -phred33 -trimlog $SHORTER.trim.log "$SHORT"_1_Apr2022.fastq.gz "$SHORT"_2_Apr2022.fastq.gz -baseout $SHORT.trim.fastq.gz ILLUMINACLIP:TruSeq3-PE.fa:2:30:10 HEADCROP:0 LEADING:0 TRAILING:0 SLIDINGWINDOW:4:10
 
 done
@@ -215,24 +209,15 @@ done
 ```
 #!/bin/sh
 
-## load the module
-
-#load the module on Easley
 module load trimmomatic/0.39
-
-ls *merged*fastq.gz > FSamplesList.txt
 
 FILELIST=`cat FSamplesList.txt`
 
 for FILENAME in $FILELIST
 do
 
-#BC-CR-130-1_merged.hifi_reads.fastq.gz
-SHORTER=`echo $FILENAME | awk -F "." '{print $1}'`
-SHORT=`echo $SHORTER | awk -F "_" '{print $1}'`
-#SHORT= BC-CR-130-1
+SHORT=`echo $FILENAME | awk -F "_" '{print $1}'`
 
-#Make sure that the path to the trimmomatic.jar file is correct
 java -jar /tools/trimmomatic-0.39/trimmomatic-0.39.jar SE -threads 48 -phred33 -trimlog "$SHORT".trim.log "$SHORT"_merged.hifi_reads.fastq.gz "$SHORT"_merged.hifi_reads.trim.fastq.gz ILLUMINACLIP:TruSeq3-PE.fa:2:30:10 CROP:33000 HEADCROP:20 SLIDINGWINDOW:4:10
 
 done
@@ -241,8 +226,8 @@ done
 ```
 #!/bin/sh
 
-module load bwa
-module load samtools
+module load bwa/2.0
+module load samtools/1.19
 
 FILELIST=`cat FSamplesList.txt`
 for FILE in $FILELIST; do 
@@ -258,3 +243,85 @@ samtools index -@ 20 "$SHORT".memsorted.bam
 
 done
 ```
+### Step3 Mark Duplicate reads
+```
+#!/bin/sh
+
+module load picard/2.23.9 
+module load samtools/1.19
+
+FILELIST=`cat FSamplesList.txt`
+for FILE in $FILELIST; do
+
+SHORT=`echo $FILE | awk -F "_" '{print $1}'`     
+
+java -jar /tools/picard-2.23.9/libs/picard.jar MarkDuplicates \
+      I="$SHORT"_merged.hifi_reads.memsorted.bam \
+      O="$SHORT"_merged.hifi_reads.markdup.bam \
+      M="$SHORT".marked_dup_metrics.txt
+
+samtools sort -@ 48 "$SHORT"_merged.hifi_reads.markdup.bam -o "$SHORT"_merged.hifi_reads.markdup.sorted.bam
+samtools index -@ 48 "$SHORT"_merged.hifi_reads.markdup.sorted.bam
+done
+```
+### Step4 Adding or replacing read groups 
+Note the read groups for the Illumina script are changed to represent the Illumina platform used for sequencing.
+```
+#!/bin/sh
+
+module load samtools
+module load picard
+
+FILELIST=`cat FSamplesList.txt`
+for FILE in $FILELIST; do
+
+SHORT=`echo $FILE | awk -F "_" '{print $1}'`
+
+ java -jar /tools/picard-2.23.9/libs/picard.jar AddOrReplaceReadGroups \
+       I="$SHORT"_merged.hifi_reads.markdup.sorted.bam \
+       O="$SHORT"_merged.hifi_reads.rg.bam \
+       RGID="$SHORT"_PacBio \
+       RGLB=Hfi_reads \
+       RGPL=PacBio \
+       RGPU=SeqII \
+       RGSM="$SHORT"
+
+samtools sort -@ 48 "$SHORT"_merged.hifi_reads.rg.bam -o "$SHORT"_merged.hifi_reads.rgsorted.bam
+samtools index -@ 48 "$SHORT"_merged.hifi_reads.rgsorted.bam
+
+done
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
