@@ -16,9 +16,6 @@ HiFi data is very high quality and does not need a whole bunch of trimming but i
 ```
 #!/bin/sh
 
-## load the module
-
-#load the module on Easley
 module load trimmomatic/0.39
 
 ls *merged*fastq.gz > FSamplesList.txt
@@ -28,12 +25,8 @@ FILELIST=`cat FSamplesList.txt`
 for FILENAME in $FILELIST
 do
 
-#BC-CR-130-1_merged.hifi_reads.fastq.gz
-SHORTER=`echo $FILENAME | awk -F "." '{print $1}'`
-SHORT=`echo $SHORTER | awk -F "_" '{print $1}'`
-#SHORT= BC-CR-130-1
+SHORT=`echo $FILENAME | awk -F "_" '{print $1}'`
 
-#Make sure that the path to the trimmomatic.jar file is correct
 java -jar /tools/trimmomatic-0.39/trimmomatic-0.39.jar SE -threads 48 -phred33 -trimlog "$SHORT".trim.log "$SHORT"_merged.hifi_reads.fastq.gz "$SHORT"_merged.hifi_reads.trim.fastq.gz ILLUMINACLIP:TruSeq3-PE.fa:2:30:10 CROP:33000 HEADCROP:20 SLIDINGWINDOW:4:10
 
 done
@@ -49,9 +42,7 @@ FILELIST=`cat FSamplesList.txt`
 
 for FILE in $FILELIST; do 
 
-# input =BC-CR-130-1_merged.hifi_reads.trim.fastq.gz
 SHORT=`echo $FILE | awk -F "_" '{print $1}'`
-# SHORT = BC-CR-130-1
 
 /tools/smrtlink/new/bundles/smrttools/smrtcmds/bin/pbmm2 align /genome.fa "$SHORT"_merged.hifi_reads.trim.fastq.gz "$SHORT".hifi_reads.bam --sort --preset CCS --sample "$SHORT" --rg '@RG\tID:"$SHORT"'
 
@@ -68,9 +59,7 @@ FILELIST=`cat FSamplesList.txt`
 
 for FILE in $FILELIST; do 
 
-# input =BC-CR-130-1_merged.hifi_reads.trim.fastq.gz
 SHORT=`echo $FILE | awk -F "_" '{print $1}'`
-# SHORT = BC-CR-130-1
 
 /tools/smrtlink/new/bundles/smrttools/smrtcmds/bin/pbsv discover "$SHORT".hifi_reads.bam "$SHORT".hifi_read.svsig.gz
 
@@ -87,9 +76,7 @@ FILELIST=`cat FSamplesList.txt`
 
 for FILE in $FILELIST; do 
 
-# input =BC-CR-130-1_merged.hifi_reads.trim.fastq.gz
 SHORT=`echo $FILE | awk -F "_" '{print $1}'`
-# SHORT = BC-CR-130-1
 
 /tools/smrtlink/new/bundles/smrttools/smrtcmds/bin/pbsv call --ccs /genome.fa "$SHORT".hifi_read.svsig.gz "$SHORT".hifi_read.vcf
 
@@ -120,9 +107,6 @@ HiFi data is very high quality and does not need a whole bunch of trimming but i
 ```
 #!/bin/sh
 
-## load the module
-
-#load the module on Easley
 module load trimmomatic/0.39
 
 ls *merged*fastq.gz > FSamplesList.txt
@@ -132,12 +116,8 @@ FILELIST=`cat FSamplesList.txt`
 for FILENAME in $FILELIST
 do
 
-#BC-CR-130-1_merged.hifi_reads.fastq.gz
-SHORTER=`echo $FILENAME | awk -F "." '{print $1}'`
-SHORT=`echo $SHORTER | awk -F "_" '{print $1}'`
-#SHORT= BC-CR-130-1
+SHORT=`echo $FILENAME | awk -F "_" '{print $1}'`
 
-#Make sure that the path to the trimmomatic.jar file is correct
 java -jar /tools/trimmomatic-0.39/trimmomatic-0.39.jar SE -threads 48 -phred33 -trimlog "$SHORT".trim.log "$SHORT"_merged.hifi_reads.fastq.gz "$SHORT"_merged.hifi_reads.trim.fastq.gz ILLUMINACLIP:/hosted/cvmpt/archive/WGS_Human/WGS3_Dec2022_TL/TruSeq3-PE.fa:2:30:10 CROP:33000 HEADCROP:20 SLIDINGWINDOW:4:10
 
 done
@@ -153,9 +133,7 @@ FILELIST=`cat FSamplesList.txt`
 
 for FILE in $FILELIST; do 
 
-# input =BC-CR-130-1_merged.hifi_reads.trim.fastq.gz
 SHORT=`echo $FILE | awk -F "_" '{print $1}'`
-# SHORT = BC-CR-130-1
 
 /tools/smrtlink/new/bundles/smrttools/smrtcmds/bin/pbmm2 align /genome.fa "$SHORT"_merged.hifi_reads.trim.fastq.gz "$SHORT".hifi_reads.bam --sort --preset CCS --sample "$SHORT" --rg '@RG\tID:"$SHORT"'
 
