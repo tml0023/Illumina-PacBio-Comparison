@@ -8,7 +8,7 @@ ___
 
 This document shows how SMRT grant PacBio HiFi whole genome sequencing samples were procecced for CNV calling and short variant calling. I am attaching a link to the [SMRT_tools manual](chrome-extension://efaidnbmnnnibpcajpcglclefindmkaj/https://www.pacb.com/wp-content/uploads/SMRT_Tools_Reference_Guide_v11.0.pdf) that is a great help. 
 ___
-## SMRTtools copy Number Variation 
+## SMRTtools Long Variant Calling 
 
 ### Step1 Trim fastq files
 HiFi data is very high quality and does not need a whole bunch of trimming but it is always helpful to take a look at the data before hand to see what exactly you want to trim. The raw data in this study was analyzed using FastQC/MultiQC.
