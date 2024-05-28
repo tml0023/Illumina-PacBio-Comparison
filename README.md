@@ -149,14 +149,14 @@ Deepvariant is a program that is not included in SMRTtools. However this is the 
 module load singularity
 
 BIN_VERSION="1.0.0"
-singularity exec --bind /hosted/cvmpt/archive/PacBio_WGS_Aug2022_TL/ftp.genome.arizona.edu/SingularityCE_Trial_Apr2023 \
+singularity exec --bind ${PATH} \
 docker://google/deepvariant:${BIN_VERSION} \
   /opt/deepvariant/bin/run_deepvariant \
   --model_type PACBIO \
   --ref genome.fa \
   --reads BC-EAMC-209-1.hifi_reads.bam \
   --output_vcf BC-EAMC-209-1.hifi_reads_deepvariant.vcf.gz \
-  --num_shards \
+  --num_shards ${nproc}\
 ```
 ___
 
