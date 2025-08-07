@@ -273,7 +273,7 @@ done
 ```
 #!/bin/sh
 
-module load gatkgatk/4.1.9.0
+module load gatk/4.1.9.0
 module load samtools/1.19
 module load R/4.3.2
 
