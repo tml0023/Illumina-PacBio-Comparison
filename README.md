@@ -32,8 +32,8 @@ java -jar /tools/trimmomatic-0.39/trimmomatic-0.39.jar SE -threads 48 -phred33 -
 done
 ```
 
-### Step2 Align HiFi reads to reference genome with minimap2 (pbmm2)
-PacBio recommends using the alignment tool minimap2 for its long-read data. This tools is available in SMRTtools provided by PacBio. 
+### Step2 Align HiFi reads to reference genome with pbmm2
+PacBio recommends using the alignment tool pbmm2 for its long-read data. This tools is available in SMRTtools provided by PacBio. 
 
 ```
 #!/bin/sh
@@ -409,9 +409,26 @@ module load R/4.3.2
    --recal-file ApplyVQSR_INDEL_SNP_PacBio_Output.vcf.recal \
    -mode INDEL
 ```
+# Minimap2 Alignment 
+Minimap2 was used to align both PacBio and Illumina data. Comparisons on Minimap2 alignment were ran against BWA-mem and pbmm2 alignments using GATKs DepthOfCoverage and Samtools Flagstat.
 
+### PacBio alignment 
+```
+#!/bin/sh
 
+module load minimap2/2.26
 
+minimap2 -ax map-hifi ref.fa Input_file.fastq > Output_file.sam
+```
+
+### Illumina alignment
+```
+#!/bin/sh
+
+module load minimap2/2.26
+
+minimap2 -ax sr ref.fa Input_file_1.fastq Input_file_2.fastq > Output_file.sam
+```
 
 
 
