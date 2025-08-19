@@ -1,5 +1,5 @@
 # Illumina-PacBio-Comparison
-In this repository I summarize the tools used to call multiple variant types for Illumina short-read data and PacBio HiFi read data for identical samples. Outputs for both datasets are compared to analyze each platforms ability to identify variants, and how this can affect the identification of genetic variants in breast cancer susceptibility genes. 
+In this repository I summarize the tools used to call multiple variant types for Illumina short-read data and PacBio HiFi read data for identical samples. Outputs for both datasets and multiple different bioinformatics tools are compared to analyze each platforms ability to identify variants, and how this can affect the identification of genetic variants in breast cancer susceptibility genes. 
 ___
 
 
