@@ -6,7 +6,7 @@ ___
 
 # PacBio HiFi data processing with SMRTtools
 
-This document shows how SMRT grant PacBio HiFi whole genome sequencing samples were procecced for CNV calling and short variant calling. I am attaching a link to the [SMRT_tools manual](chrome-extension://efaidnbmnnnibpcajpcglclefindmkaj/https://www.pacb.com/wp-content/uploads/SMRT_Tools_Reference_Guide_v11.0.pdf) that is a great help. 
+This document shows how PacBio HiFi whole genome sequencing samples were processed for CNV calling and short variant calling. I am attaching a link to the [SMRT Tools Reference Guide](https://www.pacb.com/wp-content/uploads/SMRT_Tools_Reference_Guide_v11.0.pdf) that is a great help. 
 ___
 ## SMRTtools Long Variant Calling 
 
@@ -27,7 +27,7 @@ do
 
 SHORT=`echo $FILENAME | awk -F "_" '{print $1}'`
 
-java -jar /tools/trimmomatic-0.39/trimmomatic-0.39.jar SE -threads 48 -phred33 -trimlog "$SHORT".trim.log "$SHORT"_merged.hifi_reads.fastq.gz "$SHORT"_merged.hifi_reads.trim.fastq.gz ILLUMINACLIP:TruSeq3-PE.fa:2:30:10 CROP:33000 HEADCROP:20 SLIDINGWINDOW:4:10
+java -jar <path_to>/trimmomatic-0.39.jar SE -threads <N> -phred33 -trimlog "$SHORT".trim.log "$SHORT"_merged.hifi_reads.fastq.gz "$SHORT"_merged.hifi_reads.trim.fastq.gz ILLUMINACLIP:TruSeq3-PE.fa:2:30:10 CROP:33000 HEADCROP:20 SLIDINGWINDOW:4:10
 
 done
 ```
@@ -44,7 +44,7 @@ for FILE in $FILELIST; do
 
 SHORT=`echo $FILE | awk -F "_" '{print $1}'`
 
-/tools/smrtlink/new/bundles/smrttools/smrtcmds/bin/pbmm2 align /genome.fa "$SHORT"_merged.hifi_reads.trim.fastq.gz "$SHORT".hifi_reads.bam --sort --preset CCS --sample "$SHORT" --rg '@RG\tID:"$SHORT"'
+<path_to_smrttools>/pbmm2 align <reference_genome>.fa "$SHORT"_merged.hifi_reads.trim.fastq.gz "$SHORT".hifi_reads.bam --sort --preset CCS --sample "$SHORT" --rg '@RG\tID:"$SHORT"'
 
 done
 ```
@@ -61,7 +61,7 @@ for FILE in $FILELIST; do
 
 SHORT=`echo $FILE | awk -F "_" '{print $1}'`
 
-/tools/smrtlink/new/bundles/smrttools/smrtcmds/bin/pbsv discover "$SHORT".hifi_reads.bam "$SHORT".hifi_read.svsig.gz
+<path_to_smrttools>/pbsv discover "$SHORT".hifi_reads.bam "$SHORT".hifi_read.svsig.gz
 
 done
 ```
@@ -78,7 +78,7 @@ for FILE in $FILELIST; do
 
 SHORT=`echo $FILE | awk -F "_" '{print $1}'`
 
-/tools/smrtlink/new/bundles/smrttools/smrtcmds/bin/pbsv call --ccs /genome.fa "$SHORT".hifi_read.svsig.gz "$SHORT".hifi_read.vcf
+<path_to_smrttools>/pbsv call --ccs <reference_genome>.fa "$SHORT".hifi_read.svsig.gz "$SHORT".hifi_read.vcf
 
 done
 ```
@@ -92,7 +92,7 @@ This program is not included from with SMRT_tools and must be downloaded from th
 for FILE in *vcf; do 
 
 svpack-main/svpack filter --pass-only --min-svlen 50 $FILE |
-svpack-main/svpack consequence --require-csq - ensembl.GRCh38.101.reformatted.gff3 > Annotated_"$FILE"
+svpack-main/svpack consequence --require-csq - <ensembl_annotation>.gff3 > Annotated_"$FILE"
 
 done
 ```
@@ -118,7 +118,7 @@ do
 
 SHORT=`echo $FILENAME | awk -F "_" '{print $1}'`
 
-java -jar /tools/trimmomatic-0.39/trimmomatic-0.39.jar SE -threads 48 -phred33 -trimlog "$SHORT".trim.log "$SHORT"_merged.hifi_reads.fastq.gz "$SHORT"_merged.hifi_reads.trim.fastq.gz ILLUMINACLIP:/hosted/cvmpt/archive/WGS_Human/WGS3_Dec2022_TL/TruSeq3-PE.fa:2:30:10 CROP:33000 HEADCROP:20 SLIDINGWINDOW:4:10
+java -jar <path_to>/trimmomatic-0.39.jar SE -threads <N> -phred33 -trimlog "$SHORT".trim.log "$SHORT"_merged.hifi_reads.fastq.gz "$SHORT"_merged.hifi_reads.trim.fastq.gz ILLUMINACLIP:TruSeq3-PE.fa:2:30:10 CROP:33000 HEADCROP:20 SLIDINGWINDOW:4:10
 
 done
 ```
@@ -135,7 +135,7 @@ for FILE in $FILELIST; do
 
 SHORT=`echo $FILE | awk -F "_" '{print $1}'`
 
-/tools/smrtlink/new/bundles/smrttools/smrtcmds/bin/pbmm2 align /genome.fa "$SHORT"_merged.hifi_reads.trim.fastq.gz "$SHORT".hifi_reads.bam --sort --preset CCS --sample "$SHORT" --rg '@RG\tID:"$SHORT"'
+<path_to_smrttools>/pbmm2 align <reference_genome>.fa "$SHORT"_merged.hifi_reads.trim.fastq.gz "$SHORT".hifi_reads.bam --sort --preset CCS --sample "$SHORT" --rg '@RG\tID:"$SHORT"'
 
 done
 ```
@@ -149,14 +149,23 @@ Deepvariant is a program that is not included in SMRTtools. However this is the 
 module load singularity
 
 BIN_VERSION="1.0.0"
+
+FILELIST=`cat FSamplesList.txt`
+
+for FILE in $FILELIST; do
+
+SHORT=`echo $FILE | awk -F "_" '{print $1}'`
+
 singularity exec --bind ${PATH} \
 docker://google/deepvariant:${BIN_VERSION} \
   /opt/deepvariant/bin/run_deepvariant \
   --model_type PACBIO \
-  --ref genome.fa \
-  --reads BC-EAMC-209-1.hifi_reads.bam \
-  --output_vcf BC-EAMC-209-1.hifi_reads_deepvariant.vcf.gz \
-  --num_shards ${nproc}\
+  --ref <reference_genome>.fa \
+  --reads "$SHORT".hifi_reads.bam \
+  --output_vcf "$SHORT".hifi_reads_deepvariant.vcf.gz \
+  --num_shards ${nproc}
+
+done
 ```
 ___
 
@@ -179,7 +188,7 @@ do
 
 SHORT=`echo $FILENAME | awk -F "_" '{print $1}'`
 
-java -jar /tools/trimmomatic-0.39/trimmomatic-0.39.jar PE -threads 48 -phred33 -trimlog $SHORTER.trim.log "$SHORT"_1_Apr2022.fastq.gz "$SHORT"_2_Apr2022.fastq.gz -baseout $SHORT.trim.fastq.gz ILLUMINACLIP:TruSeq3-PE.fa:2:30:10 HEADCROP:0 LEADING:0 TRAILING:0 SLIDINGWINDOW:4:10
+java -jar <path_to>/trimmomatic-0.39.jar PE -threads <N> -phred33 -trimlog "$SHORT".trim.log "$SHORT"_1_<batch>.fastq.gz "$SHORT"_2_<batch>.fastq.gz -baseout "$SHORT".trim.fastq.gz ILLUMINACLIP:TruSeq3-PE.fa:2:30:10 HEADCROP:0 LEADING:0 TRAILING:0 SLIDINGWINDOW:4:10
 
 done
 ```
@@ -196,7 +205,7 @@ do
 
 SHORT=`echo $FILENAME | awk -F "_" '{print $1}'`
 
-java -jar /tools/trimmomatic-0.39/trimmomatic-0.39.jar SE -threads 48 -phred33 -trimlog "$SHORT".trim.log "$SHORT"_merged.hifi_reads.fastq.gz "$SHORT"_merged.hifi_reads.trim.fastq.gz ILLUMINACLIP:TruSeq3-PE.fa:2:30:10 CROP:33000 HEADCROP:20 SLIDINGWINDOW:4:10
+java -jar <path_to>/trimmomatic-0.39.jar SE -threads <N> -phred33 -trimlog "$SHORT".trim.log "$SHORT"_merged.hifi_reads.fastq.gz "$SHORT"_merged.hifi_reads.trim.fastq.gz ILLUMINACLIP:TruSeq3-PE.fa:2:30:10 CROP:33000 HEADCROP:20 SLIDINGWINDOW:4:10
 
 done
 ```
@@ -212,12 +221,12 @@ for FILE in $FILELIST; do
 
 SHORT=`echo $FILE | awk -F "_" '{print $1}'`
 
-bwa mem -t 20 -M /hosted/cvmpt/archive/Human_Genome/genome "$SHORT".trim_1P.fastq \
+bwa mem -t <N> -M <reference_genome> "$SHORT".trim_1P.fastq \
         "$SHORT".trim_2P.fastq > "$SHORT".mem.sam
 
-samtools view -Sb -@ 20 "$SHORT".mem.sam -o "$SHORT".mem.bam
-samtools sort -@ 20 "$SHORT".mem.bam -o "$SHORT".memsorted.bam
-samtools index -@ 20 "$SHORT".memsorted.bam
+samtools view -Sb -@ <N> "$SHORT".mem.sam -o "$SHORT".mem.bam
+samtools sort -@ <N> "$SHORT".mem.bam -o "$SHORT".memsorted.bam
+samtools index -@ <N> "$SHORT".memsorted.bam
 
 done
 ```
@@ -233,13 +242,13 @@ for FILE in $FILELIST; do
 
 SHORT=`echo $FILE | awk -F "_" '{print $1}'`     
 
-java -jar /tools/picard-2.23.9/libs/picard.jar MarkDuplicates \
+java -jar <path_to>/picard.jar MarkDuplicates \
       I="$SHORT"_merged.hifi_reads.memsorted.bam \
       O="$SHORT"_merged.hifi_reads.markdup.bam \
       M="$SHORT".marked_dup_metrics.txt
 
-samtools sort -@ 48 "$SHORT"_merged.hifi_reads.markdup.bam -o "$SHORT"_merged.hifi_reads.markdup.sorted.bam
-samtools index -@ 48 "$SHORT"_merged.hifi_reads.markdup.sorted.bam
+samtools sort -@ <N> "$SHORT"_merged.hifi_reads.markdup.bam -o "$SHORT"_merged.hifi_reads.markdup.sorted.bam
+samtools index -@ <N> "$SHORT"_merged.hifi_reads.markdup.sorted.bam
 done
 ```
 ### Step4 Adding or replacing read groups 
@@ -255,17 +264,17 @@ for FILE in $FILELIST; do
 
 SHORT=`echo $FILE | awk -F "_" '{print $1}'`
 
- java -jar /tools/picard-2.23.9/libs/picard.jar AddOrReplaceReadGroups \
+ java -jar <path_to>/picard.jar AddOrReplaceReadGroups \
        I="$SHORT"_merged.hifi_reads.markdup.sorted.bam \
        O="$SHORT"_merged.hifi_reads.rg.bam \
        RGID="$SHORT"_PacBio \
-       RGLB=Hfi_reads \
+       RGLB=Hifi_reads \
        RGPL=PacBio \
-       RGPU=SeqII \
+       RGPU=<sequencer> \
        RGSM="$SHORT"
 
-samtools sort -@ 48 "$SHORT"_merged.hifi_reads.rg.bam -o "$SHORT"_merged.hifi_reads.rgsorted.bam
-samtools index -@ 48 "$SHORT"_merged.hifi_reads.rgsorted.bam
+samtools sort -@ <N> "$SHORT"_merged.hifi_reads.rg.bam -o "$SHORT"_merged.hifi_reads.rgsorted.bam
+samtools index -@ <N> "$SHORT"_merged.hifi_reads.rgsorted.bam
 
 done
 ```
@@ -284,15 +293,15 @@ SHORT=`echo $FILE | awk -F "_" '{print $1}'`
 
  gatk BaseRecalibrator --maximum-cycle-value 33000 \
    -I "$SHORT"_merged.hifi_reads.rgsorted.bam \
-   -R /genome.fa \
-   --known-sites /dbSNP150.hg38.vcf \
-   --known-sites /Mills_and_1000G_gold_standard.indels.hg38.vcf \
-   --known-sites /Homo_sapiens_assembly38.known_indels.vcf \
-   --known-sites /hapmap_3.3.hg38.vcf \
+   -R <reference_genome>.fa \
+   --known-sites <dbSNP>.vcf \
+   --known-sites <Mills_and_1000G_gold_standard_indels>.vcf \
+   --known-sites <known_indels>.vcf \
+   --known-sites <hapmap>.vcf \
    -O "$SHORT"_merged.hifi_reads.recal_data.table
  
  gatk ApplyBQSR \
-   -R /hosted/cvmpt/archive/Human_Genome/genome.fa \
+   -R <reference_genome>.fa \
    -I "$SHORT"_merged.hifi_reads.rgsorted.bam \
    --bqsr-recal-file "$SHORT"_merged.hifi_reads.recal_data.table \
    -O "$SHORT"_merged.hifi_reads.recal.bam
@@ -301,8 +310,8 @@ SHORT=`echo $FILE | awk -F "_" '{print $1}'`
    -bqsr "$SHORT"_merged.hifi_reads.recal_data.table \
    -plots "$SHORT"_merged.hifi_reads.AnalyzeCovariates.pdf
 
-samtools sort -@ 48 "$SHORT"_merged.hifi_reads.recal.bam -o "$SHORT"_merged.hifi_reads.recal.sorted.bam
-samtools index -@ 48 "$SHORT"_merged.hifi_reads.recal.sorted.bam
+samtools sort -@ <N> "$SHORT"_merged.hifi_reads.recal.bam -o "$SHORT"_merged.hifi_reads.recal.sorted.bam
+samtools index -@ <N> "$SHORT"_merged.hifi_reads.recal.sorted.bam
 
 done
 ```
@@ -317,14 +326,14 @@ for FILE in $FILELIST; do
 
 SHORT=`echo $FILE | awk -F "_" '{print $1}'`     
 
- gatk --java-options "-Xmx200g" HaplotypeCaller  \
-   -R /hosted/cvmpt/archive/Human_Genome/genome.fa \
+ gatk --java-options "-Xmx<heap_size>g" HaplotypeCaller  \
+   -R <reference_genome>.fa \
    -I "$SHORT"_merged.hifi_reads.recal.sorted.bam \
-   -O "$SHORT"_Oct2023_merged.hifi_reads.vcf.gz \
+   -O "$SHORT"_merged.hifi_reads.vcf.gz \
    -A AlleleFraction \
    -A BaseQuality \
    -A MappingQuality \
-   --native-pair-hmm-threads 48 
+   --native-pair-hmm-threads <N> 
 
 done
 ```
@@ -335,14 +344,14 @@ done
 module load picard/2.23.9
 module load gatk/4.1.9.0
 
-gatk --java-options "-Xmx550g -Xms550g" GenomicsDBImport \
--V BC-CR-50-1_merged.hifi_reads.vcf.gz \
--V BC-EAMC-130-1_merged.hifi_reads.vcf.gz \
--V BC-EAMC-209-1_merged.hifi_reads.vcf.gz \
--L wgs_calling_regions.hg38.interval_list \
---genomicsdb-workspace-path PacBio_GDBI_Workspace \
---tmp-dir PacBio_GDBI_tmp \
---reader-threads 48 \
+gatk --java-options "-Xmx<heap_size>g -Xms<heap_size>g" GenomicsDBImport \
+-V <sample_1>_merged.hifi_reads.vcf.gz \
+-V <sample_2>_merged.hifi_reads.vcf.gz \
+-V <sample_N>_merged.hifi_reads.vcf.gz \
+-L <wgs_calling_regions>.interval_list \
+--genomicsdb-workspace-path ./PacBio_GDBI_Workspace \
+--tmp-dir ./PacBio_GDBI_tmp \
+--reader-threads <N>
 ```
 ### Step8 GenotypeGVCF
 ```
@@ -350,11 +359,11 @@ gatk --java-options "-Xmx550g -Xms550g" GenomicsDBImport \
 
 module load gatk 
 
- gatk --java-options "-Xmx550g" GenotypeGVCFs \
-   -R /hosted/cvmpt/archive/Human_Genome/genome.fa \
+ gatk --java-options "-Xmx<heap_size>g" GenotypeGVCFs \
+   -R <reference_genome>.fa \
    -V gendb://PacBio_GDBI_Workspace \
-   -O GenotypeGVCF_output_PacBio.g.vcf.gz \
-   --tmp-dir GenotypeGVCF_PacBio_tmp
+   -O GenotypeGVCF_output_PacBio.vcf.gz \
+   --tmp-dir ./GenotypeGVCF_PacBio_tmp
 ```
 ### Step9 Variant recalibrator 
 ```
@@ -365,48 +374,48 @@ module load R/4.3.2
 
 ## recalibrate SNPs
  gatk VariantRecalibrator \
-   -R /hosted/cvmpt/archive/Human_Genome/genome.fa \
-   -V GenotypeGVCF_output_PacBio.g.vcf.gz \
-   --resource:1000G,known=false,training=true,truth=false,prior=10.0 /hosted/cvmpt/Human_Research/KnownSites/Mills_and_1000G_gold_standard.indels.hg38.vcf \
-   --resource:dbsnp,known=true,training=false,truth=false,prior=2.0 /hosted/cvmpt/Human_Research/KnownSites/dbSNP150.hg38.vcf \
-   --resource:hapmap,known=false,training=true,truth=true,prior=15.0 /hosted/cvmpt/Human_Research/KnownSites/hapmap_3.3.hg38.vcf \
+   -R <reference_genome>.fa \
+   -V GenotypeGVCF_output_PacBio.vcf.gz \
+   --resource:1000G,known=false,training=true,truth=false,prior=10.0 <Mills_and_1000G_gold_standard_indels>.vcf \
+   --resource:dbsnp,known=true,training=false,truth=false,prior=2.0 <dbSNP>.vcf \
+   --resource:hapmap,known=false,training=true,truth=true,prior=15.0 <hapmap>.vcf \
    -an DP -an QD -an FS -an SOR -an MQ -an ReadPosRankSum -an MQRankSum \
    -mode SNP \
-   -L /hosted/cvmpt/Human_Research/KnownSites/wgs_calling_regions.hg38.interval_list \
-   -O VQSR_SNP_PacBio_Output.vcf.recal \
-   --tranches-file VQSR_SNP_PacBio_Output.vcf.tranches \
-   --rscript-file VQSR_SNP_PacBio_Output.vcf.plots.R
+   -L <wgs_calling_regions>.interval_list \
+   -O vqsr_snp_pacbio.recal \
+   --tranches-file vqsr_snp_pacbio.tranches \
+   --rscript-file vqsr_snp_pacbio.plots.R
 
  gatk ApplyVQSR \
-   -R /hosted/cvmpt/archive/Human_Genome/genome.fa \
-   -V GenotypeGVCF_output_PacBio.g.vcf.gz \
-   -O ApplyVQSR_SNPs_PacBio_Output.vcf.gz \
+   -R <reference_genome>.fa \
+   -V GenotypeGVCF_output_PacBio.vcf.gz \
+   -O vqsr_snp_pacbio_filtered.vcf.gz \
    --truth-sensitivity-filter-level 90.0 \
-   --tranches-file VQSR_SNP_PacBio_Output.vcf.tranches \
-   --recal-file VQSR_SNP_PacBio_Output.vcf.recal \
+   --tranches-file vqsr_snp_pacbio.tranches \
+   --recal-file vqsr_snp_pacbio.recal \
    -mode SNP
 
-## reaclibrate for INDELs
+## recalibrate for INDELs
  gatk VariantRecalibrator \
-   -R /hosted/cvmpt/archive/Human_Genome/genome.fa \
-   -V ApplyVQSR_SNPs_PacBio_Output.vcf.gz \
-   --resource:1000G,known=false,training=true,truth=false,prior=10.0 /hosted/cvmpt/Human_Research/KnownSites/Mills_and_1000G_gold_standard.indels.hg38.vcf \
-   --resource:dbsnp,known=true,training=false,truth=false,prior=2.0 /hosted/cvmpt/Human_Research/KnownSites/dbSNP150.hg38.vcf \
-   --resource:hapmap,known=false,training=true,truth=true,prior=15.0 /hosted/cvmpt/Human_Research/KnownSites/hapmap_3.3.hg38.vcf \
+   -R <reference_genome>.fa \
+   -V vqsr_snp_pacbio_filtered.vcf.gz \
+   --resource:1000G,known=false,training=true,truth=false,prior=10.0 <Mills_and_1000G_gold_standard_indels>.vcf \
+   --resource:dbsnp,known=true,training=false,truth=false,prior=2.0 <dbSNP>.vcf \
+   --resource:hapmap,known=false,training=true,truth=true,prior=15.0 <hapmap>.vcf \
    -an DP -an QD -an FS -an SOR -an MQ -an ReadPosRankSum -an MQRankSum \
    -mode INDEL \
-   -L /hosted/cvmpt/Human_Research/KnownSites/wgs_calling_regions.hg38.interval_list \
-   -O ApplyVQSR_INDEL_SNP_PacBio_Output.vcf.recal \
-   --tranches-file VQSR_INDEL_SNP_PacBio_Output.vcf.tranches \
-   --rscript-file VQSR_INDEL_SNP_PacBio_Output.vcf.plots.R
+   -L <wgs_calling_regions>.interval_list \
+   -O vqsr_indel_pacbio.recal \
+   --tranches-file vqsr_indel_pacbio.tranches \
+   --rscript-file vqsr_indel_pacbio.plots.R
 
  gatk ApplyVQSR \
-   -R /hosted/cvmpt/archive/Human_Genome/genome.fa \
-   -V ApplyVQSR_SNPs_PacBio_Output.vcf.gz \
-   -O ApplyVQSR_INDEL_SNP_PacBio_Output.vcf.gz \
+   -R <reference_genome>.fa \
+   -V vqsr_snp_pacbio_filtered.vcf.gz \
+   -O vqsr_snp_indel_pacbio_filtered.vcf.gz \
    --truth-sensitivity-filter-level 90.0 \
-   --tranches-file VQSR_INDEL_SNP_PacBio_Output.vcf.tranches \
-   --recal-file ApplyVQSR_INDEL_SNP_PacBio_Output.vcf.recal \
+   --tranches-file vqsr_indel_pacbio.tranches \
+   --recal-file vqsr_indel_pacbio.recal \
    -mode INDEL
 ```
 # Minimap2 Alignment 
@@ -418,7 +427,7 @@ Minimap2 was used to align both PacBio and Illumina data. Comparisons on Minimap
 
 module load minimap2/2.26
 
-minimap2 -ax map-hifi ref.fa Input_file.fastq > Output_file.sam
+minimap2 -ax map-hifi <reference_genome>.fa <input_file>.fastq > <output_file>.sam
 ```
 
 ### Illumina alignment
@@ -427,28 +436,5 @@ minimap2 -ax map-hifi ref.fa Input_file.fastq > Output_file.sam
 
 module load minimap2/2.26
 
-minimap2 -ax sr ref.fa Input_file_1.fastq Input_file_2.fastq > Output_file.sam
+minimap2 -ax sr <reference_genome>.fa <input_file>_1.fastq <input_file>_2.fastq > <output_file>.sam
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
